@@ -73,7 +73,23 @@
   };
 
   Editor.prototype.getContent = function () {
-    return this.$content.html();
+    var html = this.$content.html();
+
+    var sanitizer = this.getPlugin('SanitizerPlugin');
+    if (sanitizer) {
+      return sanitizer.clean(html);
+    }
+
+    return html;
+  };
+
+  Editor.prototype.getPlugin = function (name) {
+    for (var i = 0; i < this.plugins.length; i++) {
+      if (this.plugins[i].constructor.name === name) {
+        return this.plugins[i];
+      }
+    }
+    return null;
   };
 
   Editor.prototype.setContent = function (html) {

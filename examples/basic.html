@@ -30,6 +30,7 @@
   <!-- PLUGINS -->
   <script src="../src/plugins/toolbar.js"></script>
   <script src="../src/plugins/basic-commands.js"></script>
+  <script src="../src/plugins/sanitizer.js"></script>
 
 </head>
 <body>
@@ -42,7 +43,8 @@
     $('#editor').wysiwygEditor({
       plugins: [
         ToolbarPlugin,
-        BasicCommandsPlugin
+        BasicCommandsPlugin,
+        SanitizerPlugin
       ]
     });
   </script>
