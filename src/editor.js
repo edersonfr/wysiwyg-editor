@@ -12,6 +12,7 @@
   }
 
   Editor.prototype.init = function () {
+    this.injectStyles();
     this.buildLayout();
 
     this.initCore();
@@ -102,12 +103,65 @@
   };
 
   Editor.prototype.updateToolbar = function () {
-  for (var i = 0; i < this.plugins.length; i++) {
-    if (this.plugins[i].updateState) {
-      this.plugins[i].updateState();
+    for (var i = 0; i < this.plugins.length; i++) {
+      if (this.plugins[i].updateState) {
+        this.plugins[i].updateState();
+      }
     }
-  }
-};
+  };
+
+  // =========================
+  // STYLES
+  // =========================
+
+  Editor.prototype.injectStyles = function () {
+    if (document.getElementById('wysiwyg-editor-styles')) return;
+
+    var css = `
+      .wysiwyg-editor { border:1px solid #ccc; font-family:Arial; }
+
+      .editor-toolbar {
+        border-bottom:1px solid #ddd;
+        padding:5px;
+        background:#f5f5f5;
+      }
+
+      .editor-toolbar button {
+        margin-right:5px;
+        cursor:pointer;
+      }
+
+      .editor-toolbar button.active {
+        background:#333;
+        color:#fff;
+      }
+
+      .editor-content {
+        min-height:200px;
+        padding:10px;
+        outline:none;
+        border:1px solid #ddd;
+      }
+
+      .editor-content:empty:before {
+        content: attr(data-placeholder);
+        color:#999;
+      }
+
+      .editor-preview-frame {
+        width:100%;
+        height:300px;
+        border:1px solid #ddd;
+        background:#fff;
+      }
+    `;
+
+    var style = document.createElement('style');
+    style.id = 'wysiwyg-editor-styles';
+    style.innerHTML = css;
+
+    document.head.appendChild(style);
+  };
 
   // =========================
   // DEFAULTS

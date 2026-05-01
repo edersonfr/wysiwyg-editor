@@ -9,7 +9,7 @@ PreviewPlugin.prototype.init = function () {
 };
 
 PreviewPlugin.prototype.build = function () {
-  this.$preview = $('<div class="editor-preview"/>').hide();
+  this.$preview = $('<iframe class="editor-preview-frame"/>').hide();
 
   this.editor.$container.append(this.$preview);
 };
@@ -23,15 +23,29 @@ PreviewPlugin.prototype.bind = function () {
 };
 
 PreviewPlugin.prototype.toggle = function () {
-  if (!this.editor.$content.length) return;
-
   this.active ? this.disable() : this.enable();
 };
 
 PreviewPlugin.prototype.enable = function () {
   var html = this.editor.getContent();
+  var doc = this.$preview[0].contentWindow.document;
 
-  this.$preview.html(html);
+  var cssLinks = this.buildCssLinks();
+
+  doc.open();
+  doc.write(
+    '<!DOCTYPE html>' +
+    '<html>' +
+    '<head>' +
+    cssLinks +
+    '<style>body{padding:20px;font-family:Arial}</style>' +
+    '</head>' +
+    '<body>' +
+    html +
+    '</body>' +
+    '</html>'
+  );
+  doc.close();
 
   this.editor.$content.hide();
   this.$preview.show();
@@ -44,6 +58,17 @@ PreviewPlugin.prototype.disable = function () {
   this.editor.$content.show();
 
   this.active = false;
+};
+
+PreviewPlugin.prototype.buildCssLinks = function () {
+  var css = this.editor.options.previewCss || [];
+  var links = '';
+
+  for (var i = 0; i < css.length; i++) {
+    links += '<link rel="stylesheet" href="' + css[i] + '">';
+  }
+
+  return links;
 };
 
 window.PreviewPlugin = PreviewPlugin;
