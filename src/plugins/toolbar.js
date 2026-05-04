@@ -13,6 +13,8 @@ ToolbarPlugin.prototype.render = function () {
   var editor = this.editor;
 
   var buttons = [
+    { name: 'undo', label: '↶' },
+    { name: 'redo', label: '↷' },
     { name: 'bold', label: '<b>B</b>' },
     { name: 'italic', label: '<i>I</i>' },
     { name: 'image', label: '🖼️' },

@@ -7,8 +7,8 @@ CommandRegistry.prototype.register = function (name, fn) {
   this.commands[name] = fn;
 };
 
-CommandRegistry.prototype.exec = function (name, value) {
+CommandRegistry.prototype.exec = function (name, editor, value) {
   if (this.commands[name]) {
-    this.commands[name](this.editor, value);
+    this.commands[name](editor, value);
   }
 };

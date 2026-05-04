@@ -36,6 +36,9 @@
   Editor.prototype.initCore = function () {
     this.commandRegistry = new CommandRegistry(this);
     this.selection = new SelectionManager(this);
+    this.history = new HistoryManager(this);
+
+    this.history.init();
   };
 
   // =========================
@@ -59,7 +62,15 @@
   };
 
   Editor.prototype.exec = function (name, value) {
-    this.commandRegistry.exec(name, value);
+    if (this.history) {
+      this.history.save();
+    }
+
+    this.commandRegistry.exec(name, this, value); 
+
+    if (this.history) {
+      this.history.save();
+    }
   };
 
   Editor.prototype.bindEvents = function () {
