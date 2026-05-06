@@ -161,6 +161,20 @@
       '  opacity: 0.65;\n' +
       '  cursor: not-allowed;\n' +
       '}\n' +
+      '.editor-toolbar select {\n' +
+      '  margin-right: 4px; margin-bottom: 4px; background: #fff;\n' +
+      '  border: 1px solid #dae0e5; border-radius: 3px; padding: 4px; font-size: 14px; color: #333;\n' +
+      '  vertical-align: top; height: 32px; cursor: pointer;\n' +
+      '}\n' +
+      '.editor-toolbar input[type="color"] {\n' +
+      '  margin-right: 4px; margin-bottom: 4px; border: 1px solid #dae0e5; border-radius: 3px;\n' +
+      '  padding: 0; width: 32px; height: 32px; cursor: pointer; vertical-align: top;\n' +
+      '}\n' +
+      '.editor-fullscreen { position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important; z-index: 99999; display: flex; flex-direction: column; border: none !important; border-radius: 0 !important; }\n' +
+      '.editor-fullscreen .editor-content { flex: 1; overflow-y: auto; }\n' +
+      '.editor-show-blocks p, .editor-show-blocks div, .editor-show-blocks ul, .editor-show-blocks ol, .editor-show-blocks blockquote, .editor-show-blocks table {\n' +
+      '  border: 1px dashed #adb5bd !important; padding: 2px;\n' +
+      '}\n' +
       '.editor-content {\n' +
       '  min-height: 200px;\n' +
       '  padding: 15px;\n' +

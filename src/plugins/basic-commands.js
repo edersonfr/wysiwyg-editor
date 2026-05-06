@@ -56,4 +56,54 @@ BasicCommandsPlugin.prototype.init = function () {
     if (!editor.selection || !editor.selection.isInsideEditor()) return;
     document.execCommand('justifyRight', false, null);
   });
+
+  editor.registerCommand('justifyFull', function (editor) {
+    if (!editor.selection || !editor.selection.isInsideEditor()) return;
+    document.execCommand('justifyFull', false, null);
+  });
+
+  editor.registerCommand('indent', function (editor) {
+    if (!editor.selection || !editor.selection.isInsideEditor()) return;
+    document.execCommand('indent', false, null);
+  });
+
+  editor.registerCommand('outdent', function (editor) {
+    if (!editor.selection || !editor.selection.isInsideEditor()) return;
+    document.execCommand('outdent', false, null);
+  });
+
+  editor.registerCommand('removeFormat', function (editor) {
+    if (!editor.selection || !editor.selection.isInsideEditor()) return;
+    document.execCommand('removeFormat', false, null);
+  });
+
+  editor.registerCommand('formatBlock', function (editor, value) {
+    if (!editor.selection || !editor.selection.isInsideEditor()) return;
+    document.execCommand('formatBlock', false, value);
+  });
+
+  editor.registerCommand('foreColor', function (editor, value) {
+    if (!editor.selection || !editor.selection.isInsideEditor()) return;
+    document.execCommand('foreColor', false, value);
+  });
+
+  editor.registerCommand('backColor', function (editor, value) {
+    if (!editor.selection || !editor.selection.isInsideEditor()) return;
+    document.execCommand('backColor', false, value); // backColor preenche o destaque/fundo
+  });
+
+  editor.registerCommand('fontName', function (editor, value) {
+    if (!editor.selection || !editor.selection.isInsideEditor()) return;
+    document.execCommand('fontName', false, value);
+  });
+
+  // Tamanho nativo (1 a 7). No polimento, mudaremos para 8px-72px.
+  editor.registerCommand('fontSize', function (editor, value) {
+    if (!editor.selection || !editor.selection.isInsideEditor()) return;
+    document.execCommand('fontSize', false, value);
+  });
+
+  editor.registerCommand('showBlocks', function (editor) {
+    editor.$content.toggleClass('editor-show-blocks');
+  });
 };
