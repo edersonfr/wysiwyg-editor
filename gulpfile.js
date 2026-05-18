@@ -29,7 +29,8 @@ gulp.task('build', function() {
     .pipe(gulp.dest('dist')) // Salva a versão Legível na pasta /dist
     .pipe(uglify()) // Esmaga o código (remove espaços e encurta variáveis)
     .pipe(rename('weaver-editor.min.js')) // Renomeia o arquivo
-    .pipe(gulp.dest('dist')); // Salva a versão Minificada na pasta /dist
+    .pipe(gulp.dest('dist')) // Salva a versão Minificada na pasta /dist
+    .pipe(gulp.dest('docs')); // Salva a versão Legível e Minificada na pasta /docs
 });
 
 gulp.task('default', gulp.series('build'));
