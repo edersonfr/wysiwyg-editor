@@ -7,6 +7,9 @@ function VideoPlugin(editor) {
 VideoPlugin.prototype.init = function () {
   var self = this;
 
+  // Inicializa o RangeFormatter para operações robustas no DOM
+  this.rangeFormatter = new RangeFormatter(this.editor);
+
   this.editor.registerCommand('video', function () {
     self.togglePopover();
   });
@@ -123,7 +126,14 @@ VideoPlugin.prototype.insertVideo = function () {
   if (vimeoMatch) iframeUrl = 'https://player.vimeo.com/video/' + vimeoMatch[1];
 
   var html = '<iframe width="560" height="315" style="max-width: 100%;" src="' + iframeUrl + '" frameborder="0" allowfullscreen></iframe><p><br></p>';
-  document.execCommand('insertHTML', false, html);
+  
+  // Usa RangeFormatter para inserir HTML de forma robusta
+  if (this.rangeFormatter) {
+    this.rangeFormatter.insertHTML(html);
+  } else {
+    // Fallback para execCommand se RangeFormatter não estiver disponível
+    document.execCommand('insertHTML', false, html);
+  }
   
   this.editor.trigger('change');
   this.editor.updateToolbar();

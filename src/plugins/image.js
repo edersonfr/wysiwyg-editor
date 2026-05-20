@@ -7,6 +7,9 @@ function ImagePlugin(editor) {
 ImagePlugin.prototype.init = function () {
   var self = this;
 
+  // Inicializa o RangeFormatter para operações robustas no DOM
+  this.rangeFormatter = new RangeFormatter(this.editor);
+
   this.editor.registerCommand('image', function () {
     self.openFileDialog();
   });
@@ -240,7 +243,19 @@ ImagePlugin.prototype.insertImage = function (file) {
       sel.removeAllRanges();
       sel.addRange(self.savedRange);
     }
-    document.execCommand('insertImage', false, url);
+    
+    // Cria o elemento img
+    var img = document.createElement('img');
+    img.src = url;
+    
+    // Usa RangeFormatter para inserir de forma robusta
+    if (self.rangeFormatter) {
+      self.rangeFormatter.insertNode(img, false);
+    } else {
+      // Fallback para execCommand se RangeFormatter não estiver disponível
+      document.execCommand('insertImage', false, url);
+    }
+    
     self.editor.trigger('change');
   };
 

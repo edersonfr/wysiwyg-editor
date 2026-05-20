@@ -8,6 +8,7 @@ const jsFiles = [
   'src/core/plugin.js',
   'src/core/selection.js',
   'src/core/history.js',
+  'src/core/range-formatter.js',
   'src/editor.js',
   'src/plugins/toolbar.js',
   'src/plugins/basic-commands.js',

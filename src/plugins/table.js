@@ -6,6 +6,9 @@ function TablePlugin(editor) {
 TablePlugin.prototype.init = function () {
   var self = this;
 
+  // Inicializa o RangeFormatter para operações robustas no DOM
+  this.rangeFormatter = new RangeFormatter(this.editor);
+
   this.editor.registerCommand('table', function () {
     self.toggleGrid();
   });
@@ -124,7 +127,13 @@ TablePlugin.prototype.insertTable = function (rows, cols) {
   }
   html += '</tbody></table><p><br></p>'; // Adiciona um parágrafo no final para poder continuar digitando
 
-  document.execCommand('insertHTML', false, html);
+  // Usa RangeFormatter para inserir HTML de forma robusta
+  if (this.rangeFormatter) {
+    this.rangeFormatter.insertHTML(html);
+  } else {
+    // Fallback para execCommand se RangeFormatter não estiver disponível
+    document.execCommand('insertHTML', false, html);
+  }
 };
 
 window.TablePlugin = TablePlugin;

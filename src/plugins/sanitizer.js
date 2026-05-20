@@ -31,6 +31,9 @@ SanitizerPlugin.prototype.init = function () {
     script: ['src', 'type', 'async', 'defer', 'charset']
   };
 
+  // Inicializa o RangeFormatter para operações robustas no DOM
+  this.rangeFormatter = new RangeFormatter(this.editor);
+
   this.bind();
 };
 
@@ -47,7 +50,13 @@ SanitizerPlugin.prototype.bind = function () {
 
     var clean = self.clean(content);
 
-    document.execCommand('insertHTML', false, clean);
+    // Usa RangeFormatter para inserir HTML de forma robusta
+    if (self.rangeFormatter) {
+      self.rangeFormatter.insertHTML(clean);
+    } else {
+      // Fallback para execCommand se RangeFormatter não estiver disponível
+      document.execCommand('insertHTML', false, clean);
+    }
   });
 };
 

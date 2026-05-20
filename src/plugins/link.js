@@ -8,6 +8,9 @@ function LinkPlugin(editor) {
 LinkPlugin.prototype.init = function () {
   var self = this;
 
+  // Inicializa o RangeFormatter para operações robustas no DOM
+  this.rangeFormatter = new RangeFormatter(this.editor);
+
   this.editor.registerCommand('link', function () {
     self.togglePopover();
   });
@@ -180,7 +183,14 @@ LinkPlugin.prototype.insertLink = function () {
     }
   } else {
     var linkHtml = '<a href="' + url + '"' + (isBlank ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' + text + '</a>';
-    document.execCommand('insertHTML', false, linkHtml);
+    
+    // Usa RangeFormatter para inserir HTML de forma robusta
+    if (this.rangeFormatter) {
+      this.rangeFormatter.insertHTML(linkHtml);
+    } else {
+      // Fallback para execCommand se RangeFormatter não estiver disponível
+      document.execCommand('insertHTML', false, linkHtml);
+    }
   }
   
   this.editor.trigger('change');
@@ -198,7 +208,13 @@ LinkPlugin.prototype.removeLink = function () {
     var $node = $(this.activeLinkNode);
     $node.replaceWith($node.html());
   } else {
-    document.execCommand('unlink', false, null);
+    // Usa RangeFormatter para remover link de forma robusta
+    if (this.rangeFormatter) {
+      this.rangeFormatter.unwrapLink();
+    } else {
+      // Fallback para execCommand se RangeFormatter não estiver disponível
+      document.execCommand('unlink', false, null);
+    }
   }
   
   this.editor.trigger('change');
