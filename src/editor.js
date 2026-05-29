@@ -344,6 +344,7 @@
       ['insert', ['link', 'table', 'image', 'video', 'hr']],
       ['view', ['preview', 'fullscreen', 'showBlocks', 'codeview']]
     ],
+    fontNames: null,
     placeholder: '',
     height: null
   };

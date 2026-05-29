@@ -1,6 +1,8 @@
 function TablePlugin(editor) {
   this.editor = editor;
   this.$grid = null;
+  this.$contextMenu = null;
+  this.activeCell = null;
 }
 
 TablePlugin.prototype.init = function () {
@@ -14,6 +16,8 @@ TablePlugin.prototype.init = function () {
   });
 
   this.buildGrid();
+  this.buildContextMenu();
+  this.bindEvents();
 };
 
 TablePlugin.prototype.buildGrid = function () {
@@ -134,6 +138,188 @@ TablePlugin.prototype.insertTable = function (rows, cols) {
     // Fallback para execCommand se RangeFormatter não estiver disponível
     document.execCommand('insertHTML', false, html);
   }
+};
+
+TablePlugin.prototype.buildContextMenu = function () {
+  var self = this;
+
+  this.$contextMenu = $('<div class="editor-table-context-menu absolute bg-white border border-gray-200 rounded-md shadow-md z-[100] py-1 font-sans min-w-[180px] hidden flex-col"></div>');
+  
+  var menuItems = [
+    { label: '<i data-lucide="arrow-up" class="w-4 h-4 mr-2 opacity-70"></i> Inserir Linha Acima', action: 'insertRowAbove' },
+    { label: '<i data-lucide="arrow-down" class="w-4 h-4 mr-2 opacity-70"></i> Inserir Linha Abaixo', action: 'insertRowBelow' },
+    { divider: true },
+    { label: '<i data-lucide="arrow-left" class="w-4 h-4 mr-2 opacity-70"></i> Inserir Col. à Esq.', action: 'insertColLeft' },
+    { label: '<i data-lucide="arrow-right" class="w-4 h-4 mr-2 opacity-70"></i> Inserir Col. à Dir.', action: 'insertColRight' },
+    { divider: true },
+    { label: '<i data-lucide="trash-2" class="w-4 h-4 mr-2 opacity-80"></i> <span class="font-medium">Excluir Linha</span>', action: 'deleteRow', isDestructive: true },
+    { label: '<i data-lucide="trash-2" class="w-4 h-4 mr-2 opacity-80"></i> <span class="font-medium">Excluir Coluna</span>', action: 'deleteCol', isDestructive: true },
+    { divider: true },
+    { label: '<i data-lucide="trash" class="w-4 h-4 mr-2"></i> <span class="font-semibold">Excluir Tabela</span>', action: 'deleteTable', isDestructive: true }
+  ];
+
+  $.each(menuItems, function(i, item) {
+    if (item.divider) {
+      self.$contextMenu.append('<div class="h-px bg-gray-200 my-1 mx-1"></div>');
+    } else {
+      var hoverClass = item.isDestructive ? 'hover:bg-red-50 text-red-600 hover:text-red-700' : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900';
+      var $btn = $('<button type="button" class="flex items-center mx-1 px-2 py-1.5 text-left text-sm rounded-sm focus:outline-none transition-colors select-none ' + hoverClass + '"></button>')
+        .html(item.label)
+        .on('click', function(e) {
+          e.preventDefault();
+          self[item.action]();
+          self.hideContextMenu();
+        });
+      self.$contextMenu.append($btn);
+    }
+  });
+
+  this.editor.$container.append(this.$contextMenu);
+
+  // Fecha o menu ao clicar fora
+  $(document).on('mousedown', function (e) {
+    if (!self.$contextMenu.is(e.target) && self.$contextMenu.has(e.target).length === 0) {
+      self.hideContextMenu();
+    }
+  });
+
+  // Esconde ao fazer scroll no editor
+  this.editor.$content.on('scroll', function () {
+    self.hideContextMenu();
+  });
+};
+
+TablePlugin.prototype.bindEvents = function () {
+  var self = this;
+
+  this.editor.$content.on('contextmenu', 'td, th', function (e) {
+    e.preventDefault();
+    self.activeCell = this;
+    self.showContextMenu(e);
+  });
+};
+
+TablePlugin.prototype.showContextMenu = function (e) {
+  if (!this.activeCell) return;
+
+  var containerOffset = this.editor.$container.offset();
+  if (!containerOffset) return;
+
+  var menuX = e.pageX - containerOffset.left;
+  var menuY = e.pageY - containerOffset.top;
+
+  this.$contextMenu.css({
+    display: 'flex',
+    left: menuX,
+    top: menuY
+  });
+
+  var menuWidth = this.$contextMenu.outerWidth();
+  var menuHeight = this.$contextMenu.outerHeight();
+  var containerWidth = this.editor.$container.outerWidth();
+  var containerHeight = this.editor.$container.outerHeight();
+
+  if (menuX + menuWidth > containerWidth) {
+    this.$contextMenu.css('left', Math.max(0, containerWidth - menuWidth - 5));
+  }
+  
+  if (menuY + menuHeight > containerHeight) {
+    this.$contextMenu.css('top', Math.max(0, menuY - menuHeight - 5));
+  }
+
+  if (window.lucide) {
+    window.lucide.createIcons({ root: this.$contextMenu[0] });
+  }
+};
+
+TablePlugin.prototype.hideContextMenu = function () {
+  this.$contextMenu.hide();
+  this.activeCell = null;
+};
+
+TablePlugin.prototype.insertRowAbove = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var $tr = $(this.activeCell).closest('tr');
+  var cols = $tr.children('td, th').length;
+  var newRow = '<tr>';
+  for (var i = 0; i < cols; i++) {
+    newRow += '<td style="padding: 8px; border: 1px solid #ccc;">&nbsp;</td>';
+  }
+  newRow += '</tr>';
+  $tr.before(newRow);
+  this.editor.trigger('change');
+};
+
+TablePlugin.prototype.insertRowBelow = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var $tr = $(this.activeCell).closest('tr');
+  var cols = $tr.children('td, th').length;
+  var newRow = '<tr>';
+  for (var i = 0; i < cols; i++) {
+    newRow += '<td style="padding: 8px; border: 1px solid #ccc;">&nbsp;</td>';
+  }
+  newRow += '</tr>';
+  $tr.after(newRow);
+  this.editor.trigger('change');
+};
+
+TablePlugin.prototype.insertColLeft = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var index = $(this.activeCell).index();
+  var $table = $(this.activeCell).closest('table');
+  $table.find('tr').each(function () {
+    $(this).children().eq(index).before('<td style="padding: 8px; border: 1px solid #ccc;">&nbsp;</td>');
+  });
+  this.editor.trigger('change');
+};
+
+TablePlugin.prototype.insertColRight = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var index = $(this.activeCell).index();
+  var $table = $(this.activeCell).closest('table');
+  $table.find('tr').each(function () {
+    $(this).children().eq(index).after('<td style="padding: 8px; border: 1px solid #ccc;">&nbsp;</td>');
+  });
+  this.editor.trigger('change');
+};
+
+TablePlugin.prototype.deleteRow = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var $tr = $(this.activeCell).closest('tr');
+  var $table = $tr.closest('table');
+  if ($table.find('tr').length <= 1) {
+    this.deleteTable();
+  } else {
+    $tr.remove();
+    this.editor.trigger('change');
+  }
+};
+
+TablePlugin.prototype.deleteCol = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var index = $(this.activeCell).index();
+  var $table = $(this.activeCell).closest('table');
+  if ($table.find('tr').first().children().length <= 1) {
+    this.deleteTable();
+  } else {
+    $table.find('tr').each(function () {
+      $(this).children().eq(index).remove();
+    });
+    this.editor.trigger('change');
+  }
+};
+
+TablePlugin.prototype.deleteTable = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  $(this.activeCell).closest('table').remove();
+  this.editor.trigger('change');
 };
 
 window.TablePlugin = TablePlugin;

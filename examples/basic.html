@@ -40,5 +40,49 @@
       });
   </script>
 
+  
+  <!-- <script>
+    // Substitua pela sua chave do Google Console
+    const GOOGLE_API_KEY = 'SUA_CHAVE_DE_API_AQUI'; 
+
+    // Carrega as 30 mais populares (para o menu não ficar longo demais)
+    const FONTS_TO_FETCH = 30; 
+
+    async function initEditorWithFonts() {
+      try {
+        // 1. Faz a requisição das fontes mais famosas
+        const response = await fetch(`<https://www.googleapis.com/webfonts/v1/webfonts?key=${GOOGLE_API_KEY}&sort=popularity>`);
+        const data = await response.json();
+        
+        // 2. Extrai apenas os nomes ("Roboto", "Open Sans", etc)
+        const topFonts = data.items.slice(0, FONTS_TO_FETCH).map(f => f.family);
+        
+        // 3. Monta e carrega o arquivo CSS dinâmico delas para a página e pro editor
+        const fontQuery = topFonts.map(f => `family=${f.replace(/ /g, '+')}`).join('&');
+        const styleUrl = `<https://fonts.googleapis.com/css2?${fontQuery}&display=swap>`;
+        
+        // Injeta na página atual para as fontes renderizarem no menu e área de texto
+        $('<link>').attr('rel', 'stylesheet').attr('href', styleUrl).appendTo('head');
+
+        // 4. Inicializa o Weaver Editor passando as novas informações!
+        $('#meu-editor').weaver({
+          fontNames: topFonts, // <--- Aqui as fontes da API entram
+          previewCss: [styleUrl] // <--- Garante que o modo Preview use esse novo CSS gerado!
+        });
+
+      } catch (error) {
+        console.error("Erro ao carregar Google Fonts", error);
+        
+        // Fallback: se a API falhar (ex: sem internet), abre o editor com as fontes padrões
+        $('#meu-editor').weaver(); 
+      }
+    }
+
+    $(document).ready(function() {
+      initEditorWithFonts();
+    });
+    </script> -->
+
+
 </body>
 </html>

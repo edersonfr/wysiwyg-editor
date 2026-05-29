@@ -831,6 +831,7 @@ window.RangeFormatter = RangeFormatter;
       ['insert', ['link', 'table', 'image', 'video', 'hr']],
       ['view', ['preview', 'fullscreen', 'showBlocks', 'codeview']]
     ],
+    fontNames: null,
     placeholder: '',
     height: null
   };
@@ -862,24 +863,21 @@ ToolbarPlugin.prototype.init = function () {
 ToolbarPlugin.prototype.render = function () {
   var editor = this.editor;
 
+  var defaultFonts = editor.options.fontNames || ['Arial', 'Courier New', 'Georgia', 'Tahoma', 'Times New Roman', 'Verdana', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 'Oswald'];
+  var fontOptionsList = [];
+  for (var f = 0; f < defaultFonts.length; f++) {
+    var fName = defaultFonts[f];
+    fontOptionsList.push({
+      label: '<span style="font-family: \'' + fName + '\', sans-serif; font-size:14px;">' + fName + '</span>',
+      value: fName
+    });
+  }
+
   var defaultButtonLibrary = {
     undo: { name: 'undo', label: '<i data-lucide="undo"></i>', title: 'Desfazer' },
     redo: { name: 'redo', label: '<i data-lucide="redo"></i>', title: 'Refazer' },
     removeFormat: { name: 'removeFormat', label: '<i data-lucide="eraser"></i>', title: 'Remover Formatação' },
-    fontName: { name: 'fontName', type: 'dropdown', title: 'Fonte', text: 'Fonte', options: [
-      { label: '<span style="font-family: Arial, sans-serif; font-size:14px;">Arial</span>', value: 'Arial' },
-      { label: '<span style="font-family: \'Courier New\', Courier, monospace; font-size:14px;">Courier New</span>', value: 'Courier New' },
-      { label: '<span style="font-family: Georgia, serif; font-size:14px;">Georgia</span>', value: 'Georgia' },
-      { label: '<span style="font-family: Tahoma, sans-serif; font-size:14px;">Tahoma</span>', value: 'Tahoma' },
-      { label: '<span style="font-family: \'Times New Roman\', Times, serif; font-size:14px;">Times New Roman</span>', value: 'Times New Roman' },
-      { label: '<span style="font-family: Verdana, sans-serif; font-size:14px;">Verdana</span>', value: 'Verdana' },
-      { label: '<span style="font-family: Roboto, sans-serif; font-size:14px;">Roboto</span>', value: 'Roboto' },
-      { label: '<span style="font-family: \'Open Sans\', sans-serif; font-size:14px;">Open Sans</span>', value: 'Open Sans' },
-      { label: '<span style="font-family: Lato, sans-serif; font-size:14px;">Lato</span>', value: 'Lato' },
-      { label: '<span style="font-family: Montserrat, sans-serif; font-size:14px;">Montserrat</span>', value: 'Montserrat' },
-      { label: '<span style="font-family: Poppins, sans-serif; font-size:14px;">Poppins</span>', value: 'Poppins' },
-      { label: '<span style="font-family: Oswald, sans-serif; font-size:14px;">Oswald</span>', value: 'Oswald' }
-    ]},
+    fontName: { name: 'fontName', type: 'dropdown', title: 'Fonte', text: 'Fonte', options: fontOptionsList },
     fontSize: { name: 'fontSize', type: 'dropdown', title: 'Tamanho', text: 'Tamanho', options: [
       { label: '8px', value: '8' },
       { label: '10px', value: '10' },
@@ -936,6 +934,7 @@ ToolbarPlugin.prototype.render = function () {
     mobile: { name: 'mobile', label: '<i data-lucide="smartphone"></i>', title: 'Modo Mobile', previewOnly: true },
     closePreview: { name: 'closePreview', label: '<i data-lucide="x"></i> <span class="ml-1 font-semibold text-xs">Sair</span>', title: 'Sair do Preview', previewOnly: true },
     fullscreen: { name: 'fullscreen', label: '<i data-lucide="maximize"></i>', title: 'Tela Cheia' },
+    closeFullscreen: { name: 'closeFullscreen', label: '<i data-lucide="x"></i> <span class="ml-1 font-semibold text-xs">Sair</span>', title: 'Sair da Tela Cheia', fullscreenOnly: true },
     showBlocks: { name: 'showBlocks', label: '<i data-lucide="layout-grid"></i>', title: 'Mostrar Blocos' },
     codeview: { name: 'codeview', label: '<i data-lucide="code"></i>', title: 'Código Fonte' }
   };
@@ -1144,6 +1143,11 @@ ToolbarPlugin.prototype.render = function () {
         if (btn.name === 'closePreview') {
           $element.removeClass('text-gray-700 hover:bg-gray-50 px-1').addClass('ml-auto text-red-600 hover:bg-red-50 border-red-200 px-3');
         }
+    } else if (btn.fullscreenOnly) {
+      $element.addClass('fullscreen-only-btn hidden');
+      if (btn.name === 'closeFullscreen') {
+        $element.removeClass('text-gray-700 hover:bg-gray-50 px-1').addClass('text-red-600 hover:bg-red-50 border-red-200 px-3');
+      }
       } else {
         $element.addClass('standard-btn');
       }
@@ -1188,11 +1192,19 @@ ToolbarPlugin.prototype.render = function () {
 
   // Garante que os botões vitais de Preview sejam gerados silenciosamente no fundo para entrarem em ação
   var previewBtns = ['desktop', 'tablet', 'mobile', 'closePreview'];
-  var $pGroup = $('<div class="editor-toolbar-group flex gap-1 items-center w-full"/>');
+  var $pGroup = $('<div class="editor-toolbar-group flex gap-1 items-center w-full hidden"/>');
   for (var p = 0; p < previewBtns.length; p++) {
     if (!self.buttons[previewBtns[p]]) $pGroup.append(createButtonElement(defaultButtonLibrary[previewBtns[p]]));
   }
   if ($pGroup.children().length > 0) editor.$toolbar.append($pGroup);
+
+  // Garante que o botão de sair da tela cheia seja anexado no fim da barra, à direita (ml-auto)
+  var $fsGroup = $('<div class="editor-toolbar-group flex gap-1 items-center ml-auto hidden"/>');
+  var fullscreenBtns = ['closeFullscreen'];
+  for (var f = 0; f < fullscreenBtns.length; f++) {
+    if (!self.buttons[fullscreenBtns[f]]) $fsGroup.append(createButtonElement(defaultButtonLibrary[fullscreenBtns[f]]));
+  }
+  if ($fsGroup.children().length > 0) editor.$toolbar.append($fsGroup);
 
   // Caso o script do Lucide já tenha carregado
   if (window.lucide) {
@@ -2178,6 +2190,8 @@ window.LinkPlugin = LinkPlugin;
 function TablePlugin(editor) {
   this.editor = editor;
   this.$grid = null;
+  this.$contextMenu = null;
+  this.activeCell = null;
 }
 
 TablePlugin.prototype.init = function () {
@@ -2191,6 +2205,8 @@ TablePlugin.prototype.init = function () {
   });
 
   this.buildGrid();
+  this.buildContextMenu();
+  this.bindEvents();
 };
 
 TablePlugin.prototype.buildGrid = function () {
@@ -2311,6 +2327,188 @@ TablePlugin.prototype.insertTable = function (rows, cols) {
     // Fallback para execCommand se RangeFormatter não estiver disponível
     document.execCommand('insertHTML', false, html);
   }
+};
+
+TablePlugin.prototype.buildContextMenu = function () {
+  var self = this;
+
+  this.$contextMenu = $('<div class="editor-table-context-menu absolute bg-white border border-gray-200 rounded-md shadow-md z-[100] py-1 font-sans min-w-[180px] hidden flex-col"></div>');
+  
+  var menuItems = [
+    { label: '<i data-lucide="arrow-up" class="w-4 h-4 mr-2 opacity-70"></i> Inserir Linha Acima', action: 'insertRowAbove' },
+    { label: '<i data-lucide="arrow-down" class="w-4 h-4 mr-2 opacity-70"></i> Inserir Linha Abaixo', action: 'insertRowBelow' },
+    { divider: true },
+    { label: '<i data-lucide="arrow-left" class="w-4 h-4 mr-2 opacity-70"></i> Inserir Col. à Esq.', action: 'insertColLeft' },
+    { label: '<i data-lucide="arrow-right" class="w-4 h-4 mr-2 opacity-70"></i> Inserir Col. à Dir.', action: 'insertColRight' },
+    { divider: true },
+    { label: '<i data-lucide="trash-2" class="w-4 h-4 mr-2 opacity-80"></i> <span class="font-medium">Excluir Linha</span>', action: 'deleteRow', isDestructive: true },
+    { label: '<i data-lucide="trash-2" class="w-4 h-4 mr-2 opacity-80"></i> <span class="font-medium">Excluir Coluna</span>', action: 'deleteCol', isDestructive: true },
+    { divider: true },
+    { label: '<i data-lucide="trash" class="w-4 h-4 mr-2"></i> <span class="font-semibold">Excluir Tabela</span>', action: 'deleteTable', isDestructive: true }
+  ];
+
+  $.each(menuItems, function(i, item) {
+    if (item.divider) {
+      self.$contextMenu.append('<div class="h-px bg-gray-200 my-1 mx-1"></div>');
+    } else {
+      var hoverClass = item.isDestructive ? 'hover:bg-red-50 text-red-600 hover:text-red-700' : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900';
+      var $btn = $('<button type="button" class="flex items-center mx-1 px-2 py-1.5 text-left text-sm rounded-sm focus:outline-none transition-colors select-none ' + hoverClass + '"></button>')
+        .html(item.label)
+        .on('click', function(e) {
+          e.preventDefault();
+          self[item.action]();
+          self.hideContextMenu();
+        });
+      self.$contextMenu.append($btn);
+    }
+  });
+
+  this.editor.$container.append(this.$contextMenu);
+
+  // Fecha o menu ao clicar fora
+  $(document).on('mousedown', function (e) {
+    if (!self.$contextMenu.is(e.target) && self.$contextMenu.has(e.target).length === 0) {
+      self.hideContextMenu();
+    }
+  });
+
+  // Esconde ao fazer scroll no editor
+  this.editor.$content.on('scroll', function () {
+    self.hideContextMenu();
+  });
+};
+
+TablePlugin.prototype.bindEvents = function () {
+  var self = this;
+
+  this.editor.$content.on('contextmenu', 'td, th', function (e) {
+    e.preventDefault();
+    self.activeCell = this;
+    self.showContextMenu(e);
+  });
+};
+
+TablePlugin.prototype.showContextMenu = function (e) {
+  if (!this.activeCell) return;
+
+  var containerOffset = this.editor.$container.offset();
+  if (!containerOffset) return;
+
+  var menuX = e.pageX - containerOffset.left;
+  var menuY = e.pageY - containerOffset.top;
+
+  this.$contextMenu.css({
+    display: 'flex',
+    left: menuX,
+    top: menuY
+  });
+
+  var menuWidth = this.$contextMenu.outerWidth();
+  var menuHeight = this.$contextMenu.outerHeight();
+  var containerWidth = this.editor.$container.outerWidth();
+  var containerHeight = this.editor.$container.outerHeight();
+
+  if (menuX + menuWidth > containerWidth) {
+    this.$contextMenu.css('left', Math.max(0, containerWidth - menuWidth - 5));
+  }
+  
+  if (menuY + menuHeight > containerHeight) {
+    this.$contextMenu.css('top', Math.max(0, menuY - menuHeight - 5));
+  }
+
+  if (window.lucide) {
+    window.lucide.createIcons({ root: this.$contextMenu[0] });
+  }
+};
+
+TablePlugin.prototype.hideContextMenu = function () {
+  this.$contextMenu.hide();
+  this.activeCell = null;
+};
+
+TablePlugin.prototype.insertRowAbove = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var $tr = $(this.activeCell).closest('tr');
+  var cols = $tr.children('td, th').length;
+  var newRow = '<tr>';
+  for (var i = 0; i < cols; i++) {
+    newRow += '<td style="padding: 8px; border: 1px solid #ccc;">&nbsp;</td>';
+  }
+  newRow += '</tr>';
+  $tr.before(newRow);
+  this.editor.trigger('change');
+};
+
+TablePlugin.prototype.insertRowBelow = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var $tr = $(this.activeCell).closest('tr');
+  var cols = $tr.children('td, th').length;
+  var newRow = '<tr>';
+  for (var i = 0; i < cols; i++) {
+    newRow += '<td style="padding: 8px; border: 1px solid #ccc;">&nbsp;</td>';
+  }
+  newRow += '</tr>';
+  $tr.after(newRow);
+  this.editor.trigger('change');
+};
+
+TablePlugin.prototype.insertColLeft = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var index = $(this.activeCell).index();
+  var $table = $(this.activeCell).closest('table');
+  $table.find('tr').each(function () {
+    $(this).children().eq(index).before('<td style="padding: 8px; border: 1px solid #ccc;">&nbsp;</td>');
+  });
+  this.editor.trigger('change');
+};
+
+TablePlugin.prototype.insertColRight = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var index = $(this.activeCell).index();
+  var $table = $(this.activeCell).closest('table');
+  $table.find('tr').each(function () {
+    $(this).children().eq(index).after('<td style="padding: 8px; border: 1px solid #ccc;">&nbsp;</td>');
+  });
+  this.editor.trigger('change');
+};
+
+TablePlugin.prototype.deleteRow = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var $tr = $(this.activeCell).closest('tr');
+  var $table = $tr.closest('table');
+  if ($table.find('tr').length <= 1) {
+    this.deleteTable();
+  } else {
+    $tr.remove();
+    this.editor.trigger('change');
+  }
+};
+
+TablePlugin.prototype.deleteCol = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  var index = $(this.activeCell).index();
+  var $table = $(this.activeCell).closest('table');
+  if ($table.find('tr').first().children().length <= 1) {
+    this.deleteTable();
+  } else {
+    $table.find('tr').each(function () {
+      $(this).children().eq(index).remove();
+    });
+    this.editor.trigger('change');
+  }
+};
+
+TablePlugin.prototype.deleteTable = function () {
+  if (!this.activeCell) return;
+  this.editor.history.save();
+  $(this.activeCell).closest('table').remove();
+  this.editor.trigger('change');
 };
 
 window.TablePlugin = TablePlugin;
@@ -2741,6 +2939,15 @@ FullscreenPlugin.prototype.init = function () {
   this.editor.registerCommand('fullscreen', function () {
     self.toggle();
   });
+  this.editor.registerCommand('closeFullscreen', function () {
+    if (self.active) self.toggle();
+  });
+
+  $(document).on('keydown', function(e) {
+    if (e.key === 'Escape' && self.active) {
+      self.toggle();
+    }
+  });
 };
 
 FullscreenPlugin.prototype.toggle = function () {
@@ -2748,10 +2955,17 @@ FullscreenPlugin.prototype.toggle = function () {
   this.editor.$container.toggleClass('editor-fullscreen', this.active);
 
   var $btn = this.editor.$toolbar.find('[data-name="fullscreen"]');
+  var $closeBtn = this.editor.$toolbar.find('[data-name="closeFullscreen"]');
+  var $closeBtnGroup = $closeBtn.closest('.editor-toolbar-group');
+
   if (this.active) {
-    $btn.addClass('active');
+    $btn.hide();
+    $closeBtn.removeClass('hidden');
+    $closeBtnGroup.removeClass('hidden');
   } else {
-    $btn.removeClass('active');
+    $btn.show();
+    $closeBtn.addClass('hidden');
+    $closeBtnGroup.addClass('hidden');
   }
 };
 

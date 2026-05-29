@@ -8,6 +8,15 @@ FullscreenPlugin.prototype.init = function () {
   this.editor.registerCommand('fullscreen', function () {
     self.toggle();
   });
+  this.editor.registerCommand('closeFullscreen', function () {
+    if (self.active) self.toggle();
+  });
+
+  $(document).on('keydown', function(e) {
+    if (e.key === 'Escape' && self.active) {
+      self.toggle();
+    }
+  });
 };
 
 FullscreenPlugin.prototype.toggle = function () {
@@ -15,10 +24,17 @@ FullscreenPlugin.prototype.toggle = function () {
   this.editor.$container.toggleClass('editor-fullscreen', this.active);
 
   var $btn = this.editor.$toolbar.find('[data-name="fullscreen"]');
+  var $closeBtn = this.editor.$toolbar.find('[data-name="closeFullscreen"]');
+  var $closeBtnGroup = $closeBtn.closest('.editor-toolbar-group');
+
   if (this.active) {
-    $btn.addClass('active');
+    $btn.hide();
+    $closeBtn.removeClass('hidden');
+    $closeBtnGroup.removeClass('hidden');
   } else {
-    $btn.removeClass('active');
+    $btn.show();
+    $closeBtn.addClass('hidden');
+    $closeBtnGroup.addClass('hidden');
   }
 };
 

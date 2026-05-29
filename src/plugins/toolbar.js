@@ -12,24 +12,21 @@ ToolbarPlugin.prototype.init = function () {
 ToolbarPlugin.prototype.render = function () {
   var editor = this.editor;
 
+  var defaultFonts = editor.options.fontNames || ['Arial', 'Courier New', 'Georgia', 'Tahoma', 'Times New Roman', 'Verdana', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 'Oswald'];
+  var fontOptionsList = [];
+  for (var f = 0; f < defaultFonts.length; f++) {
+    var fName = defaultFonts[f];
+    fontOptionsList.push({
+      label: '<span style="font-family: \'' + fName + '\', sans-serif; font-size:14px;">' + fName + '</span>',
+      value: fName
+    });
+  }
+
   var defaultButtonLibrary = {
     undo: { name: 'undo', label: '<i data-lucide="undo"></i>', title: 'Desfazer' },
     redo: { name: 'redo', label: '<i data-lucide="redo"></i>', title: 'Refazer' },
     removeFormat: { name: 'removeFormat', label: '<i data-lucide="eraser"></i>', title: 'Remover Formatação' },
-    fontName: { name: 'fontName', type: 'dropdown', title: 'Fonte', text: 'Fonte', options: [
-      { label: '<span style="font-family: Arial, sans-serif; font-size:14px;">Arial</span>', value: 'Arial' },
-      { label: '<span style="font-family: \'Courier New\', Courier, monospace; font-size:14px;">Courier New</span>', value: 'Courier New' },
-      { label: '<span style="font-family: Georgia, serif; font-size:14px;">Georgia</span>', value: 'Georgia' },
-      { label: '<span style="font-family: Tahoma, sans-serif; font-size:14px;">Tahoma</span>', value: 'Tahoma' },
-      { label: '<span style="font-family: \'Times New Roman\', Times, serif; font-size:14px;">Times New Roman</span>', value: 'Times New Roman' },
-      { label: '<span style="font-family: Verdana, sans-serif; font-size:14px;">Verdana</span>', value: 'Verdana' },
-      { label: '<span style="font-family: Roboto, sans-serif; font-size:14px;">Roboto</span>', value: 'Roboto' },
-      { label: '<span style="font-family: \'Open Sans\', sans-serif; font-size:14px;">Open Sans</span>', value: 'Open Sans' },
-      { label: '<span style="font-family: Lato, sans-serif; font-size:14px;">Lato</span>', value: 'Lato' },
-      { label: '<span style="font-family: Montserrat, sans-serif; font-size:14px;">Montserrat</span>', value: 'Montserrat' },
-      { label: '<span style="font-family: Poppins, sans-serif; font-size:14px;">Poppins</span>', value: 'Poppins' },
-      { label: '<span style="font-family: Oswald, sans-serif; font-size:14px;">Oswald</span>', value: 'Oswald' }
-    ]},
+    fontName: { name: 'fontName', type: 'dropdown', title: 'Fonte', text: 'Fonte', options: fontOptionsList },
     fontSize: { name: 'fontSize', type: 'dropdown', title: 'Tamanho', text: 'Tamanho', options: [
       { label: '8px', value: '8' },
       { label: '10px', value: '10' },
@@ -86,6 +83,7 @@ ToolbarPlugin.prototype.render = function () {
     mobile: { name: 'mobile', label: '<i data-lucide="smartphone"></i>', title: 'Modo Mobile', previewOnly: true },
     closePreview: { name: 'closePreview', label: '<i data-lucide="x"></i> <span class="ml-1 font-semibold text-xs">Sair</span>', title: 'Sair do Preview', previewOnly: true },
     fullscreen: { name: 'fullscreen', label: '<i data-lucide="maximize"></i>', title: 'Tela Cheia' },
+    closeFullscreen: { name: 'closeFullscreen', label: '<i data-lucide="x"></i> <span class="ml-1 font-semibold text-xs">Sair</span>', title: 'Sair da Tela Cheia', fullscreenOnly: true },
     showBlocks: { name: 'showBlocks', label: '<i data-lucide="layout-grid"></i>', title: 'Mostrar Blocos' },
     codeview: { name: 'codeview', label: '<i data-lucide="code"></i>', title: 'Código Fonte' }
   };
@@ -294,6 +292,11 @@ ToolbarPlugin.prototype.render = function () {
         if (btn.name === 'closePreview') {
           $element.removeClass('text-gray-700 hover:bg-gray-50 px-1').addClass('ml-auto text-red-600 hover:bg-red-50 border-red-200 px-3');
         }
+    } else if (btn.fullscreenOnly) {
+      $element.addClass('fullscreen-only-btn hidden');
+      if (btn.name === 'closeFullscreen') {
+        $element.removeClass('text-gray-700 hover:bg-gray-50 px-1').addClass('text-red-600 hover:bg-red-50 border-red-200 px-3');
+      }
       } else {
         $element.addClass('standard-btn');
       }
@@ -338,11 +341,19 @@ ToolbarPlugin.prototype.render = function () {
 
   // Garante que os botões vitais de Preview sejam gerados silenciosamente no fundo para entrarem em ação
   var previewBtns = ['desktop', 'tablet', 'mobile', 'closePreview'];
-  var $pGroup = $('<div class="editor-toolbar-group flex gap-1 items-center w-full"/>');
+  var $pGroup = $('<div class="editor-toolbar-group flex gap-1 items-center w-full hidden"/>');
   for (var p = 0; p < previewBtns.length; p++) {
     if (!self.buttons[previewBtns[p]]) $pGroup.append(createButtonElement(defaultButtonLibrary[previewBtns[p]]));
   }
   if ($pGroup.children().length > 0) editor.$toolbar.append($pGroup);
+
+  // Garante que o botão de sair da tela cheia seja anexado no fim da barra, à direita (ml-auto)
+  var $fsGroup = $('<div class="editor-toolbar-group flex gap-1 items-center ml-auto hidden"/>');
+  var fullscreenBtns = ['closeFullscreen'];
+  for (var f = 0; f < fullscreenBtns.length; f++) {
+    if (!self.buttons[fullscreenBtns[f]]) $fsGroup.append(createButtonElement(defaultButtonLibrary[fullscreenBtns[f]]));
+  }
+  if ($fsGroup.children().length > 0) editor.$toolbar.append($fsGroup);
 
   // Caso o script do Lucide já tenha carregado
   if (window.lucide) {
